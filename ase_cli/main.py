@@ -21,7 +21,7 @@ def main():
     parser = argparse.ArgumentParser(description='ASE Command Line Interface')
     subparser = parser.add_subparsers(help="Command that database will execute", dest='command', required=True)
 
-    # Add the commands here
+    # Add the parsers for the commands here
     ase_cli.average_file.parse(subparser)
     ase_cli.convert_ase_files.parse(subparser)
     ase_cli.supercell.parse(subparser)
