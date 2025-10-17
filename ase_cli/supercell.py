@@ -1,5 +1,6 @@
 import argparse
 from ase.io import read, write
+from ase.build import make_supercell
 import os
 
 def parse(subparser):
@@ -14,11 +15,16 @@ def main(args):
     atoms = read(args.filename, index =':')
     args.filename.close()
     
+    # for ats in atoms:
+    #     ats.repeat(args.repeats)
+
+    supsercell_atoms = []
     for ats in atoms:
-        ats.repeat(args.repeats)
+        tt = make_supercell(ats, [[args.repeats[0],0,0],[0,args.repeats[1],0],[0,0,args.repeats[2]]])
+        supsercell_atoms.append(tt)
 
     if args.output is None:
         output = os.path.splitext(args.filename.name)[0] + "_supercell" + os.path.splitext(args.filename.name)[1]
     else:
         output = args.output
-    write(output, atoms)
+    write(output, supsercell_atoms)
