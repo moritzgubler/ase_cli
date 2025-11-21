@@ -6,11 +6,12 @@ special_keys = [
                 "energy",
                 "forces",
                 "stress",
-                "natoms"
+                "natoms",
+                "volume"
                 ]
 
 def parse(subparser):
-    parser = subparser.add_parser("get_property", help='Prints the value of a property for a given atom in a file.')
+    parser = subparser.add_parser("get_property", help='Prints the value of a property for a given atom in a file. Energy, forces, stress, natoms and vollume are computed, others must be in the info dictionary.')
     parser.add_argument('filename', type=argparse.FileType('r'), help='The file to average.')
     parser.add_argument('property', type=str, help='The property to get.')
     parser.add_argument('--index', type=str, help='The index of the structure to get the property for.', required = False, default = ':')
@@ -32,5 +33,7 @@ def main(args):
                 print(ats.get_stress(voigt=False))
             elif args.property == "natoms":
                 print(len(atoms))
+            elif args.property == "volume":
+                print(ats.get_volume())
             else:
                 print("this should not happen")
