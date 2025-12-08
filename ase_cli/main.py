@@ -2,6 +2,7 @@ import argparse
 import ase_cli.average_file
 import ase_cli.convert_ase_files
 import ase_cli.get_property
+import ase_cli.qe_input
 import ase_cli.rattle
 import ase_cli.supercell
 
@@ -28,6 +29,7 @@ def main():
     ase_cli.supercell.parse(subparser)
     ase_cli.rattle.parse(subparser)
     ase_cli.get_property.parse(subparser)
+    ase_cli.qe_input.parse(subparser)
 
     # Parse the arguments
     main_args = parser.parse_args()
