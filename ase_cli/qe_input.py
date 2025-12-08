@@ -1,6 +1,7 @@
 from ase.io import read
 from ase.io.espresso import write_espresso_in
 import os
+import json
 
 def parse(subparser):
     parser = subparser.add_parser("qe_input", help='Writes a minimal Quantum ESPRESSO input file from a structure file.')
@@ -14,7 +15,9 @@ def parse(subparser):
     parser.add_argument('--ecutwfc', type=float, help='Kinetic energy cutoff for wavefunctions in Ry. Default: 80', default=80.0)
     parser.add_argument('--ecutrho', type=float, help='Kinetic energy cutoff for charge density in Ry. Default: 800', default=800.0)
     parser.add_argument('--degauss', type=float, help='Gaussian spreading for smearing in Ry. Default: 1e-10', default=1.0e-10)
+    parser.add_argument('--smearing', type=str, help='Smearing type (gaussian, methfessel-paxton, marzari-vanderbilt, cold, fermi-dirac). Default: gaussian', default='gaussian')
     parser.add_argument('--mixing-beta', type=float, help='Mixing factor for self-consistency. Default: 0.4', default=0.4)
+    parser.add_argument('--params-json', type=str, help='JSON file with input_data parameters. This will override default parameters but command-line arguments take precedence.', default=None)
     # Set the function to be called when this command is used
     parser.set_defaults(func=main)
 
@@ -67,24 +70,53 @@ def main(args):
     if len(koffset) != 3:
         raise ValueError("K-offset must be specified as three integers (e.g., '0 0 0')")
 
-    # Minimal input parameters for Quantum ESPRESSO
-    input_data = {
-        'control': {
-            'calculation': 'scf',
-            'pseudo_dir': args.pseudodir,
-        },
-        'system': {
-            'occupations': 'smearing',
-            'smearing': 'gaussian',
-            'degauss': args.degauss,
-            'ecutwfc': args.ecutwfc,
-            'ecutrho': args.ecutrho,
-        },
-        'electrons': {
-            'conv_thr': 1.0e-10,
-            'mixing_beta': args.mixing_beta,
-        },
-    }
+    # Load parameters from JSON if provided
+    if args.params_json:
+        with open(args.params_json, 'r') as f:
+            input_data = json.load(f)
+        # Ensure pseudo_dir is set
+        if 'control' not in input_data:
+            input_data['control'] = {}
+        input_data['control']['pseudo_dir'] = args.pseudodir
+    else:
+        # Default input parameters for Quantum ESPRESSO
+        input_data = {
+            'control': {
+                'calculation': 'scf',
+                'pseudo_dir': args.pseudodir,
+            },
+            'system': {
+                'occupations': 'smearing',
+                'smearing': args.smearing,
+                'degauss': args.degauss,
+                'ecutwfc': args.ecutwfc,
+                'ecutrho': args.ecutrho,
+            },
+            'electrons': {
+                'conv_thr': 1.0e-10,
+                'mixing_beta': args.mixing_beta,
+            },
+        }
+
+    # Override with command-line arguments (if they differ from defaults)
+    if args.params_json:
+        if 'system' not in input_data:
+            input_data['system'] = {}
+        if 'electrons' not in input_data:
+            input_data['electrons'] = {}
+
+        # Only override if user explicitly set these values
+        import sys
+        if '--ecutwfc' in sys.argv:
+            input_data['system']['ecutwfc'] = args.ecutwfc
+        if '--ecutrho' in sys.argv:
+            input_data['system']['ecutrho'] = args.ecutrho
+        if '--degauss' in sys.argv:
+            input_data['system']['degauss'] = args.degauss
+        if '--smearing' in sys.argv:
+            input_data['system']['smearing'] = args.smearing
+        if '--mixing-beta' in sys.argv:
+            input_data['electrons']['mixing_beta'] = args.mixing_beta
 
     # Write the QE input file
     with open(args.output, 'w') as f:
