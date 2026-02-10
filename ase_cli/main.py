@@ -4,6 +4,7 @@ import ase_cli.convert_ase_files
 import ase_cli.get_property
 import ase_cli.qe_input
 import ase_cli.rattle
+import ase_cli.rotate
 import ase_cli.supercell
 
 def main():
@@ -30,6 +31,7 @@ def main():
     ase_cli.rattle.parse(subparser)
     ase_cli.get_property.parse(subparser)
     ase_cli.qe_input.parse(subparser)
+    ase_cli.rotate.parse(subparser)
 
     # Parse the arguments
     main_args = parser.parse_args()
